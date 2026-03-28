@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 0. Authentication & Authorization
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String    // Hashed
+  name            String
+  role            String    @default("CASHIER") // ADMIN, MANAGER, CASHIER
+  status          String    @default("ACTIF")   // ACTIF, INACTIF
+  
+  // Relations inverses
+  stockMovements  StockMovement[]
+  auditLogs       AuditLog[]
+  transactions    Transaction[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("users")
+}
+
+// 1. Products (Référentiel Produit)
+model Product {
+  id              String   @id @default(uuid())
+  material        String   // Matière/Composition (ex: Coton, Polyester)
+  name            String   // Nom de l'article (ex: Rideau Voilage)
+  category        String   // Ex: Rideaux, Draps, Accessoires
+  color           String?  // Couleur/Motif
+  dimensions      String?  // Dimensions (ex: 140x260, King Size)
+  unit            String   @default("PIECE") // PIECE, METRE
+  minThreshold    Int      // Alerte Seuil Mini
+  sellingPrice    Float    @default(0) // Prix de Vente Public
+  status          String   @default("ACTIF")
+  
+  // Identification
+  codeMatrix      String?  @unique // DataMatrix complet
+  barCode         String?  @unique // EAN13
+
+  // Relations
+  batches         Batch[]
+  movements       StockMovement[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("products")
+}
+
+// 2. Stocks / Batches (Gestion des Lots)
+model Batch {
+  id              String   @id @default(uuid())
+  batchNumber     String   // Numéro de lot ou ID Rouleau
+  receivedDate    DateTime @default(now()) // Date de réception (remplace péremption)
+  costPrice       Float    // PAMP (Prix d'Achat Moyen Pondéré)
+  quantity        Int      // Stock physique actuel du lot
+
+  // Relations
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  
+  movements       StockMovement[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([receivedDate])
+  @@map("batches")
+}
+
+// 3. Stock Movements (Table IMMUABLE - Ledger)
+model StockMovement {
+  id              String       @id @default(uuid())
+  type            String       // IN, OUT, BREAKAGE, RETURN, ADJUSTMENT
+  quantity        Int          // Positif ou négatif selon le sens
+  reason          String?
+  
+  // Relation User (Qui a fait le mouvement)
+  userId          String       
+  user            User         @relation(fields: [userId], references: [id])
+  
+  timestamp       DateTime     @default(now())
+
+  // Relations
+  productId       String
+  product         Product      @relation(fields: [productId], references: [id])
+  
+  batchId         String
+  batch           Batch        @relation(fields: [batchId], references: [id])
+
+  transactionId   String?
+  transaction     Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@map("stock_movements")
+}
+
+// 4. Financial Transactions (Lien Stock -> Finance)
+model Transaction {
+  id              String   @id @default(uuid())
+  amount          Float
+  type            String   // SALE, PURCHASE, REFUND
+  paymentMethod   String   // CASH, CARD, INSURANCE, MOBILE_MONEY
+  status          String   @default("COMPLETED") // COMPLETED, CANCELLED, PENDING
+  
+  // Insurance fields
+  insuranceId     String?
+  insurancePart   Float? @default(0)
+  patientPart     Float? @default(0)
+  insurance       Insurance? @relation(fields: [insuranceId], references: [id])
+
+  // Customer Relation (Optionnel)
+  customerId      String?
+  customer        Customer?  @relation(fields: [customerId], references: [id])
+
+  // Relation User (Qui a encaissé)
+  userId          String   @default("system")
+  user            User?    @relation(fields: [userId], references: [id])
+
+  // Relations
+  movements       StockMovement[]
+  
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([customerId])
+  @@map("transactions")
+}
+
+model Customer {
+  id           String        @id @default(uuid())
+  name         String
+  phone        String?       @unique
+  email        String?       @unique
+  address      String?
+  category     String        @default("DÉTAILLANT") // DÉTAILLANT, GROSSISTE, FIDÈLE
+  status       String        @default("ACTIF")
+  
+  transactions Transaction[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("customers")
+}
+
+model Insurance {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  code         String?       @unique
+  percentage   Int           @default(0) // Taux de prise en charge par défaut
+  status       String        @default("ACTIF")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@map("insurances")
+}
+
+// 5. Audit Log (Sécurité)
+model AuditLog {
+  id              String   @id @default(uuid())
+  action          String   // DELETE_PRODUCT, MANUAL_ADJUSTMENT
+  details         String?
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  timestamp       DateTime @default(now())
+
+  @@map("audit_logs")
+}

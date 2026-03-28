@@ -1,0 +1,82 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+    try {
+        const session = await auth();
+
+        // Sécurité : Accès restreint aux utilisateurs authentifiés
+        if (!session?.user) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const salesToday = await prisma.transaction.findMany({
+            where: {
+                type: 'SALE',
+                createdAt: { gte: today },
+                status: 'COMPLETED'
+            }
+        });
+
+        const dailyRevenue = salesToday.reduce((sum: number, tx: { amount: unknown }) => sum + Number(tx.amount), 0);
+
+        const allProducts = await prisma.product.findMany({
+            where: { status: 'ACTIF' },
+            include: {
+                batches: {
+                    where: { quantity: { gt: 0 } }
+                }
+            }
+        });
+
+        let totalStockValue = 0;
+        let outOfStockCount = 0;
+
+        allProducts.forEach((product: { batches: { quantity: number }[]; sellingPrice: unknown }) => {
+            const productQty = product.batches.reduce((sum: number, b: { quantity: number }) => sum + b.quantity, 0);
+            if (productQty <= 0) outOfStockCount++;
+            totalStockValue += productQty * Number(product.sellingPrice);
+        });
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const recentDeliveries = await prisma.batch.findMany({
+            where: {
+                receivedDate: {
+                    gte: new Date(),
+                },
+            },
+            orderBy: {
+                receivedDate: 'asc',
+            },
+            take: 5,
+            include: {
+                product: true
+            }
+        });
+
+        return NextResponse.json({
+            revenueToday: dailyRevenue,
+            stockValue: totalStockValue,
+            stockCount: allProducts.length,
+            outOfStockCount: outOfStockCount,
+            recentDeliveries: recentDeliveries.map((b: any) => ({
+                productName: b.product.name,
+                batchNumber: b.batchNumber,
+                receivedDate: b.receivedDate.toISOString(),
+                quantity: b.quantity
+            }))
+        });
+
+    } catch (error) {
+        console.error("Dashboard Stats Error:", error);
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    }
+}

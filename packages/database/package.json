@@ -1,0 +1,22 @@
+{
+    "name": "database",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "build": "prisma generate",
+        "db:push": "prisma db push",
+        "db:generate": "prisma generate"
+    },
+    "prisma": {
+        "seed": "npx tsx prisma/seed.ts"
+    },
+    "dependencies": {
+        "@prisma/client": "5.10.2",
+        "prisma": "5.10.2",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3",
+        "@types/node": "^20.11.0",
+        "bcryptjs": "^2.4.3",
+        "@types/bcryptjs": "^2.4.6"
+    }
+}
