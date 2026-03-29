@@ -14,6 +14,9 @@
                 "DATABASE_URL",
                 "DIRECT_URL",
                 "AUTH_SECRET",
+                "AUTH_URL",
+                "NEXTAUTH_URL",
+                "NODE_ENV",
                 "UPSTASH_REDIS_REST_URL",
                 "UPSTASH_REDIS_REST_TOKEN"
             ]
