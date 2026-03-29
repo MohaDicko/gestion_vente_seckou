@@ -27,7 +27,7 @@ export async function GET(
                         name: true
                     }
                 },
-                insurance: true
+                partner: true
             }
         });
 
@@ -62,9 +62,9 @@ export async function GET(
             amount: Number(tx.amount),
             paymentMethod: tx.paymentMethod,
             cashierName: tx.user?.name || 'Admin',
-            insuranceName: tx.insurance?.name,
-            insurancePart: Number(tx.insurancePart),
-            patientPart: Number(tx.patientPart),
+            partnerName: tx.partner?.name,
+            partnerAmount: Number(tx.partnerAmount),
+            clientAmount: Number(tx.clientAmount),
             items: Array.from(itemsMap.values())
         };
 

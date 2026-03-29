@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, FileDown, Trash2, Edit2, PackagePlus, Loader2, ShoppingCart } from "lucide-react"
+import { Search, Plus, FileDown, Trash2, Edit2, PackagePlus, Loader2, ShoppingCart, AlertTriangle } from "lucide-react"
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog"
@@ -91,6 +91,7 @@ const ProductRow = memo(({ product, onEdit, onDelete, onRestock, canDelete }: {
 export default function InventoryManager() {
     const { user } = useAuth()
     const { products, loading, addProduct, deleteProduct, isAdding, isDeleting } = useInventory()
+    const { downloadCsv } = useCsvExport()
     const [searchTerm, setSearchTerm] = useState("")
 
     const filteredProducts = useMemo(() => 
@@ -126,7 +127,7 @@ export default function InventoryManager() {
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Le Catalogue <span className="text-slate-300 italic font-light">Sekou</span></h1>
                 </div>
                 <div className="flex items-center gap-3">
-                   <Button variant="outline" className="rounded-xl border-slate-200 font-bold px-5 bg-white shadow-soft" onClick={() => useCsvExport().downloadCsv(products)}>
+                   <Button variant="outline" className="rounded-xl border-slate-200 font-bold px-5 bg-white shadow-soft" onClick={() => downloadCsv(products as unknown as Record<string, unknown>[], "catalogue_sekou.csv")}>
                         <FileDown className="w-4 h-4 mr-2" /> Exporter CSV
                    </Button>
                    <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 shadow-modern" onClick={() => setIsAddModalOpen(true)}>

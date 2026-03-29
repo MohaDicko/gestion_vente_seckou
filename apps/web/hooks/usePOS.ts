@@ -39,7 +39,7 @@ export function usePOS() {
     const clearCart = useCallback(() => setCart([]), [])
 
     // ── Financial Meta ──────────────────────────────────────────────
-    const totalTTC = cart.reduce((s, i) => s + i.price * i.quantity, 0)
+    const totalTTC = cart.reduce((s, i) => s + i.sellingPrice * i.quantity, 0)
 
     // ── Operations ──────────────────────────────────────────────────
     const checkoutMutation = useMutation({

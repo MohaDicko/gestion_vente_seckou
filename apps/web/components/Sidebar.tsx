@@ -38,7 +38,7 @@ export function Sidebar({ className, onClick, ...props }: SidebarProps) {
         { title: "Factures & Devis", href: "/reports/financial", icon: ScrollText, roles: [ROLES.ADMIN, ROLES.MANAGER] },
         { title: "Analyses de Ventes", href: "/reports", icon: TrendingUp, roles: [ROLES.ADMIN, ROLES.MANAGER] },
         { title: "Gestion Clients", href: "/customers", icon: Users2, roles: [ROLES.ADMIN, ROLES.MANAGER] },
-        { title: "Partenaires & Comptes", href: "/insurances", icon: Building2, roles: [ROLES.ADMIN] },
+        { title: "Partenaires & Comptes", href: "/partners", icon: Building2, roles: [ROLES.ADMIN] },
         { title: "Gestion de l'Équipe", href: "/users", icon: ShieldCheck, roles: [ROLES.ADMIN] },
         { title: "Audit & Sécurité", href: "/audit", icon: ShieldCheck, roles: [ROLES.ADMIN] },
         { title: "Paramètres", href: "/settings", icon: Settings, roles: [ROLES.ADMIN, ROLES.MANAGER, ROLES.CASHIER] },

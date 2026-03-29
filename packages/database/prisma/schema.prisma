@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // 0. Authentication & Authorization
@@ -110,11 +111,11 @@ model Transaction {
   paymentMethod   String   // CASH, CARD, INSURANCE, MOBILE_MONEY
   status          String   @default("COMPLETED") // COMPLETED, CANCELLED, PENDING
   
-  // Insurance fields
-  insuranceId     String?
-  insurancePart   Float? @default(0)
-  patientPart     Float? @default(0)
-  insurance       Insurance? @relation(fields: [insuranceId], references: [id])
+  // Partner fields
+  partnerId       String?
+  partnerAmount   Float? @default(0)
+  clientAmount    Float? @default(0)
+  partner         Partner? @relation(fields: [partnerId], references: [id])
 
   // Customer Relation (Optionnel)
   customerId      String?
@@ -151,17 +152,17 @@ model Customer {
   @@map("customers")
 }
 
-model Insurance {
+model Partner {
   id           String        @id @default(uuid())
   name         String        @unique
   code         String?       @unique
-  percentage   Int           @default(0) // Taux de prise en charge par défaut
+  percentage   Int           @default(0) // Taux de réduction/commission par défaut
   status       String        @default("ACTIF")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   transactions Transaction[]
 
-  @@map("insurances")
+  @@map("partners")
 }
 
 // 5. Audit Log (Sécurité)

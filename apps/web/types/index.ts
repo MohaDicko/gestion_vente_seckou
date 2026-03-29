@@ -31,7 +31,7 @@ export interface Transaction {
     id: string;
     type: 'SALE' | 'PURCHASE' | 'REFUND';
     amount: number;
-    paymentMethod: 'CASH' | 'CARD' | 'INSURANCE' | 'MOBILE_MONEY';
+    paymentMethod: 'CASH' | 'CARD' | 'PARTNER' | 'MOBILE_MONEY';
     status: 'COMPLETED' | 'CANCELLED' | 'PENDING';
     createdAt: string;
 }

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         const session = await auth();
-        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'PHARMACIST')) {
+        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER')) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 

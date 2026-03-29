@@ -22,9 +22,9 @@ interface ReceiptProps {
         email?: string;
         taxId?: string;
     };
-    insuranceName?: string;
-    insurancePart?: number;
-    patientPart?: number;
+    partnerName?: string;
+    partnerPart?: number;
+    clientPart?: number;
 }
 
 export const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(({
@@ -40,9 +40,9 @@ export const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(({
         phone: "+223 00 00 00 00",
         email: "contact@sekou-draperie.com"
     },
-    insuranceName,
-    insurancePart = 0,
-    patientPart = 0
+    partnerName,
+    partnerPart = 0,
+    clientPart = 0
 }, ref) => {
     // Calculs
     const totalHT = Math.round(total / 1.18);
@@ -122,15 +122,15 @@ export const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(({
                     <span>{totalTVA.toLocaleString()} F</span>
                 </div>
 
-                {insurancePart > 0 && (
+                {partnerPart > 0 && (
                     <div className="space-y-1 pt-1 mt-1 border-t border-dotted border-gray-400">
                         <div className="flex justify-between text-[10px] font-bold text-indigo-700">
-                            <span>Prise en charge {insuranceName}</span>
-                            <span>-{insurancePart.toLocaleString()} F</span>
+                            <span>Part Partenaire {partnerName}</span>
+                            <span>-{partnerPart.toLocaleString()} F</span>
                         </div>
                         <div className="flex justify-between text-[10px] font-bold">
-                            <span>Ticket Modérateur (Patient)</span>
-                            <span>{patientPart.toLocaleString()} F</span>
+                            <span>Reliquat Client</span>
+                            <span>{clientPart.toLocaleString()} F</span>
                         </div>
                     </div>
                 )}

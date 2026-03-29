@@ -26,9 +26,9 @@ interface Transaction {
     status: string
     paymentMethod: string
     products: string
-    insuranceName: string | null
-    insurancePart: number
-    patientPart: number
+    partnerName: string | null
+    partnerAmount: number
+    clientAmount: number
 }
 
 interface PaginationMeta {
@@ -51,7 +51,7 @@ const METHOD_OPTIONS = [
     { value: 'CASH', label: 'Espèces' },
     { value: 'MOBILE_MONEY', label: 'Mobile Money' },
     { value: 'CARD', label: 'Carte Bancaire' },
-    { value: 'INSURANCE', label: 'Assurance' },
+    { value: 'PARTNER', label: 'Partenaire' },
     { value: 'INVOICE', label: 'Facture' },
 ]
 
@@ -116,9 +116,9 @@ export default function TransactionsList() {
             Methode_Paiement: t.paymentMethod,
             Produits: t.products,
             Statut: t.status,
-            Assurance: t.insuranceName ?? '',
-            Part_Assurance: t.insurancePart,
-            Part_Patient: t.patientPart,
+            Partenaire: t.partnerName ?? '',
+            Part_Partenaire: t.partnerAmount,
+            Part_Client: t.clientAmount,
         }))
         downloadCsv(data, `transactions-p${page}-${new Date().toISOString().split('T')[0]}.csv`)
         toast("Export CSV de la page en cours...", 'success')
@@ -338,9 +338,9 @@ export default function TransactionsList() {
                                             </TableCell>
                                             <TableCell className="max-w-[240px]">
                                                 <div className="truncate text-sm" title={tx.products}>{tx.products || '—'}</div>
-                                                {tx.insuranceName && (
+                                                {tx.partnerName && (
                                                     <div className="text-[10px] text-indigo-600 font-medium mt-0.5">
-                                                        🛡️ {tx.insuranceName} ({tx.insurancePart.toLocaleString('fr-FR')} F)
+                                                        🤝 {tx.partnerName} ({tx.partnerAmount.toLocaleString('fr-FR')} F)
                                                     </div>
                                                 )}
                                             </TableCell>

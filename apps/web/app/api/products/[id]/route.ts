@@ -9,19 +9,19 @@ export async function PATCH(
 ) {
     try {
         const session = await auth();
-        if (!session || !['ADMIN', 'PHARMACIST'].includes(session.user.role as string)) {
+        if (!session || !['ADMIN', 'MANAGER'].includes(session.user.role as string)) {
             return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
         }
 
         const { id } = await params;
         const body = await req.json();
-        const { name, dci, category, sellingPrice, minThreshold } = body;
+        const { name, material, category, sellingPrice, minThreshold } = body;
 
         const updated = await prisma.product.update({
             where: { id },
             data: {
                 ...(name && { name }),
-                ...(dci !== undefined && { dci }),
+                ...(material !== undefined && { material }),
                 ...(category && { category }),
                 ...(sellingPrice && { sellingPrice: Number(sellingPrice) }),
                 ...(minThreshold && { minThreshold: Number(minThreshold) }),

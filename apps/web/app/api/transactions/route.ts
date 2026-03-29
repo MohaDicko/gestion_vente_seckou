@@ -47,7 +47,7 @@ export async function GET(req: Request) {
                     movements: {
                         include: { product: { select: { id: true, name: true, sellingPrice: true } } }
                     },
-                    insurance: { select: { name: true } }
+                    partner: { select: { name: true } }
                 }
             }),
             prisma.transaction.count({ where })
@@ -69,9 +69,9 @@ export async function GET(req: Request) {
                 amount: Number(tx.amount),
                 paymentMethod: tx.paymentMethod,
                 status: tx.status ?? 'COMPLETED',
-                insuranceName: tx.insurance?.name ?? null,
-                insurancePart: tx.insurancePart ? Number(tx.insurancePart) : 0,
-                patientPart: tx.patientPart ? Number(tx.patientPart) : 0,
+                partnerName: tx.partner?.name ?? null,
+                partnerAmount: tx.partnerAmount ? Number(tx.partnerAmount) : 0,
+                clientAmount: tx.clientAmount ? Number(tx.clientAmount) : 0,
                 items,
                 products: items.map(i => `${i.name} (×${i.quantity})`).join(', '),
             };
