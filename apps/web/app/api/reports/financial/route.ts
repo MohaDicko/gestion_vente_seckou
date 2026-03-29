@@ -30,7 +30,7 @@ export async function GET(req: Request) {
                         batch: { select: { costPrice: true } }
                     }
                 },
-                insurance: { select: { name: true } },
+                partner: { select: { name: true } },
             },
             orderBy: { createdAt: 'desc' }
         });

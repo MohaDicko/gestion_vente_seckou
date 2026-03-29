@@ -25,8 +25,8 @@ export async function getPOSProducts() {
     });
 }
 
-export async function getPOSInsurances() {
-    return await prisma.insurance.findMany({
+export async function getPOSPartners() {
+    return await prisma.partner.findMany({
         where: { status: 'ACTIF' },
         orderBy: { name: 'asc' }
     });
