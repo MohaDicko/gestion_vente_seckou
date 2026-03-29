@@ -17,7 +17,7 @@ export async function GET() {
         const session = await auth();
         if (!session) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
-        const insurances = await prisma.insurance.findMany({
+        const insurances = await prisma.partner.findMany({
             orderBy: { name: 'asc' },
             select: {
                 id: true,
@@ -55,16 +55,16 @@ export async function POST(req: Request) {
         const { name, code, percentage } = validation.data;
 
         // Check unicité
-        const existing = await prisma.insurance.findFirst({ where: { name } });
+        const existing = await prisma.partner.findFirst({ where: { name } });
         if (existing) {
-            return NextResponse.json({ error: `Une assurance nommée "${name}" existe déjà` }, { status: 409 });
+            return NextResponse.json({ error: `Un partenaire nommé "${name}" existe déjà` }, { status: 409 });
         }
 
-        const insurance = await prisma.insurance.create({
+        const partner = await prisma.partner.create({
             data: { name, code: code || null, percentage }
         });
 
-        return NextResponse.json(insurance, { status: 201 });
+        return NextResponse.json(partner, { status: 201 });
     } catch (error) {
         console.error('Insurance POST Error:', error);
         return NextResponse.json({ error: 'Erreur lors de la création' }, { status: 500 });

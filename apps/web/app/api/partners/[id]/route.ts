@@ -25,7 +25,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: 'Données invalides', details: validation.error.format() }, { status: 400 });
         }
 
-        const updated = await prisma.insurance.update({
+        const updated = await prisma.partner.update({
             where: { id },
             data: validation.data,
         });
@@ -47,14 +47,14 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
         }
 
         // Soft delete : on désactive plutôt que de supprimer (préserve l'historique)
-        const updated = await prisma.insurance.update({
+        const updated = await prisma.partner.update({
             where: { id },
             data: { status: 'INACTIF' },
         });
 
-        return NextResponse.json({ message: `Assurance "${updated.name}" désactivée`, insurance: updated });
+        return NextResponse.json({ message: `Partenaire "${updated.name}" désactivé`, partner: updated });
     } catch (error) {
-        console.error('Insurance DELETE Error:', error);
+        console.error('Partner DELETE Error:', error);
         return NextResponse.json({ error: 'Erreur lors de la désactivation' }, { status: 500 });
     }
 }
