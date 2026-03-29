@@ -12,12 +12,12 @@ async function seed() {
     await prisma.batch.deleteMany({});
     await prisma.product.deleteMany({});
 
-    // 2. Produits de test
+    // 2. Produits Textiles de Luxe
     const products = [
-        { name: "Doliprane 1000mg", dci: "Paracétamol", category: "Antalgique", minThreshold: 50, price: 300 },
-        { name: "Amoxicilline 500mg", dci: "Amoxicilline", category: "Antibiotique", minThreshold: 20, price: 1500 },
-        { name: "Spasfon Lyoc", dci: "Phloroglucinol", category: "Antispasmodique", minThreshold: 10, price: 2800 },
-        { name: "Vitamine C UPSA", dci: "Acide Ascorbique", category: "Complément", minThreshold: 15, price: 1200 },
+        { name: "Rideau Voilage Blanc", material: "Polyester", category: "Rideaux", minThreshold: 10, price: 15000 },
+        { name: "Tissu Velours Royal", material: "Velours", category: "Tissus", minThreshold: 5, price: 25000 },
+        { name: "Drap Soie Premium", material: "Soie", category: "Linge de lit", minThreshold: 8, price: 45000 },
+        { name: "Nappe Coton Brodé", material: "Coton", category: "Linge de table", minThreshold: 12, price: 12000 },
     ];
 
     const user = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
@@ -27,7 +27,7 @@ async function seed() {
         const product = await prisma.product.create({
             data: {
                 name: p.name,
-                dci: p.dci,
+                material: p.material,
                 category: p.category,
                 minThreshold: p.minThreshold,
                 sellingPrice: p.price,
@@ -42,14 +42,14 @@ async function seed() {
                     batchNumber: `${p.name.substring(0, 3).toUpperCase()}-24-001`,
                     quantity: 100,
                     costPrice: p.price * 0.6,
-                    expiryDate: new Date('2026-12-31'),
+                    receivedDate: new Date('2024-01-01'),
                 },
                 {
                     productId: product.id,
                     batchNumber: `${p.name.substring(0, 3).toUpperCase()}-24-002`,
                     quantity: 5,
                     costPrice: p.price * 0.6,
-                    expiryDate: new Date('2024-06-30'), // Déjà périmé ou proche
+                    receivedDate: new Date('2024-03-01'),
                 }
             ]
         });
