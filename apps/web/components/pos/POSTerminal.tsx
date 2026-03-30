@@ -43,6 +43,7 @@ export default function POSTerminal() {
     const [searchQuery, setSearchQuery] = useState("")
     const [isSuccess, setIsSuccess] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'MOBILE_MONEY' | 'CARD'>('CASH')
+    const [cashReceived, setCashReceived] = useState<number>(0)
 
     const filteredCatalog = useMemo(() => 
         products.filter(p => 
@@ -55,8 +56,11 @@ export default function POSTerminal() {
         try {
             await processCheckout({ paymentMethod })
             setIsSuccess(true)
+            setCashReceived(0)
         } catch {}
     }
+
+    const isCashShort = paymentMethod === 'CASH' && cashReceived > 0 && cashReceived < totalTTC;
 
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] animate-in fade-in duration-500 gap-6">
@@ -105,7 +109,7 @@ export default function POSTerminal() {
                                 <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-2">Le ticket de caisse a été généré</p>
                             </div>
                             <Button className="mt-4 rounded-2xl px-12 h-14 bg-slate-900 font-black shadow-modern scale-100 active:scale-95 transition-all" 
-                                onClick={() => { setIsSuccess(false); clearCart(); }}>
+                                onClick={() => { setIsSuccess(false); clearCart(); setCashReceived(0); }}>
                                 Nouvelle Vente
                             </Button>
                         </div>
@@ -174,14 +178,44 @@ export default function POSTerminal() {
                                     </div>
                                 </div>
 
+                                {/* ── CHAMP ESPÈCES REÇUES ET CALCUL MONNAIE ── */}
+                                {paymentMethod === 'CASH' && (
+                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Espèces Reçues</span>
+                                        <div className="relative">
+                                            <Input 
+                                                type="number" 
+                                                placeholder="Montant remis par le client..." 
+                                                className="pl-4 pr-12 h-14 bg-white border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary/5 text-lg font-black text-slate-900"
+                                                value={cashReceived || ''} 
+                                                onChange={e => setCashReceived(Number(e.target.value))}
+                                                min={0}
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-300">F</span>
+                                        </div>
+                                        
+                                        {cashReceived > 0 && (
+                                            <div className={cn("mt-3 flex items-center justify-between p-4 rounded-2xl border", 
+                                                cashReceived >= totalTTC ? "bg-emerald-50 border-emerald-100/50" : "bg-rose-50 border-rose-100/50")}>
+                                                <span className={cn("text-xs font-black uppercase tracking-widest", cashReceived >= totalTTC ? "text-emerald-600" : "text-rose-600")}>
+                                                    {cashReceived >= totalTTC ? "Monnaie à rendre" : "Montant Insuffisant"}
+                                                </span>
+                                                <span className={cn("text-xl font-black tracking-tighter", cashReceived >= totalTTC ? "text-emerald-600" : "text-rose-600")}>
+                                                    {Math.abs(cashReceived - totalTTC).toLocaleString()} F
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="flex items-center justify-between pt-2">
                                     <div>
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total à Régler</span>
                                         <span className="text-4xl font-black text-slate-900 tracking-tighter">{totalTTC.toLocaleString()} F</span>
                                     </div>
                                 </div>
-                                <Button size="lg" className="w-full h-16 rounded-[1.5rem] bg-slate-900 text-white shadow-modern-lg font-black text-lg hover:bg-slate-800 transition-all active:scale-[0.98]" 
-                                    disabled={cart.length === 0 || isProcessing} onClick={handleFinalCheckout}>
+                                <Button size="lg" className="w-full h-16 rounded-[1.5rem] bg-slate-900 text-white shadow-modern-lg font-black text-lg hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50" 
+                                    disabled={cart.length === 0 || isProcessing || isCashShort} onClick={handleFinalCheckout}>
                                     {isProcessing ? <Loader2 className="animate-spin w-6 h-6" /> : <><CheckCircle2 className="mr-3 w-6 h-6 text-primary" strokeWidth={3} /> VALIDER LE PAIEMENT</>}
                                 </Button>
                             </div>
