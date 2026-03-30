@@ -131,10 +131,10 @@ const seedHandler = async (req: Request) => {
     }
 };
 
-// 🛡️ SÉCURITÉ : Désactivé au niveau structurel en Production
-// 🛡️ SÉCURITÉ : Désactivé au niveau structurel en Vercel Production (VERCEL_ENV)
-// Note: NODE_ENV est 'production' même en Preview sur Vercel, donc on utilise VERCEL_ENV.
-export const GET = process.env.VERCEL_ENV === 'production'
+// 🛡️ SÉCURITÉ : Désactivé en Production ET en Preview Vercel
+// Un attaquant ne peut pas réinitialiser la base via une URL preview
+const isVercelDeployed = process.env.VERCEL_ENV === 'production' || process.env.VERCEL_ENV === 'preview';
+
+export const GET = isVercelDeployed
     ? async () => new NextResponse(null, { status: 404 })
     : seedHandler;
-

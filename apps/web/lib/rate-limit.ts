@@ -38,9 +38,10 @@ export async function rateLimit(identifier: string): Promise<boolean> {
     }
 
     // 2. Fallback Mémoire (Dev uniquement)
-    // En production sur Vercel, sans Redis, chaque fonction lambda a sa propre mémoire -> Inefficace.
+    // En production sur Vercel, sans Redis, on bloque par sécurité (fail closed).
     if (process.env.NODE_ENV === 'production' && !process.env.UPSTASH_REDIS_REST_URL) {
-        console.warn("⚠️ RateLimiter: Utilisation de la mémoire en Production ! Configurez UPSTASH_REDIS_REST_URL.");
+        console.warn("⚠️ RateLimiter: Pas de Redis en Production ! Requête bloquée par sécurité. Configurez UPSTASH_REDIS_REST_URL.");
+        return false; // Fail CLOSED : bloque jusqu'à configuration correcte
     }
 
     const now = Date.now();

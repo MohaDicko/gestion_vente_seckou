@@ -54,6 +54,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
         }
 
+        // Validation mot de passe : min 8 chars, 1 majuscule, 1 chiffre
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return NextResponse.json({
+                error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre."
+            }, { status: 400 });
+        }
+
+        // Validation rôle
+        const validRoles = ['ADMIN', 'MANAGER', 'CASHIER'];
+        if (!validRoles.includes(role)) {
+            return NextResponse.json({ error: "Rôle invalide" }, { status: 400 });
+        }
+
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) {
             return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 400 });
