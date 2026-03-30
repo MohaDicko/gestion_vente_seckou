@@ -50,11 +50,11 @@ export async function GET() {
         const recentDeliveries = await prisma.batch.findMany({
             where: {
                 receivedDate: {
-                    gte: new Date(),
+                    gte: thirtyDaysAgo,
                 },
             },
             orderBy: {
-                receivedDate: 'asc',
+                receivedDate: 'desc',
             },
             take: 5,
             include: {
