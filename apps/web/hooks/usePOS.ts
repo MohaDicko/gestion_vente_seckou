@@ -52,7 +52,14 @@ export function usePOS() {
                     ...paymentData
                 })
             })
-            if (!res.ok) throw new Error("Erreur transaction")
+            if (!res.ok) {
+                let errorMessage = "Erreur de transaction Inconnue";
+                try {
+                    const errorData = await res.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (e) { } // Ignore JSON parsing errors
+                throw new Error(errorMessage);
+            }
             return res.json()
         },
         onSuccess: (data) => {
