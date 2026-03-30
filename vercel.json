@@ -1,6 +1,8 @@
 {
-  "buildCommand": "npm run build:web",
-  "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "installCommand": "npm install"
+  "rootDirectory": "apps/web",
+  "buildCommand": "cd ../.. && npx prisma generate --schema=packages/database/prisma/schema.prisma && cd apps/web && npx next build",
+  "installCommand": "cd ../.. && npm install",
+  "outputDirectory": ".next",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web packages/database"
 }
