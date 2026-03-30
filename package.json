@@ -10,13 +10,19 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:e2e": "npx playwright test",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:seed": "npx tsx packages/database/prisma/seed.ts",
+    "db:push": "npx prisma db push --schema=packages/database/prisma/schema.prisma"
+  },
+  "prisma": {
+    "seed": "npx tsx packages/database/prisma/seed.ts"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@playwright/test": "^1.58.2",
     "prettier": "^3.0.0",
+    "tsx": "^4.21.0",
     "turbo": "latest"
   },
   "engines": {
