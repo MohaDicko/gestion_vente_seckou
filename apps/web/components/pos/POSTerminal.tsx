@@ -3,7 +3,7 @@
 import { useState, useMemo, memo } from "react"
 import {
     Search, ShoppingCart, Plus, Minus, CreditCard,
-    ScanBarcode, Loader2, CheckCircle2
+    ScanBarcode, Loader2, CheckCircle2, Wallet, Smartphone
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,7 @@ export default function POSTerminal() {
     
     const [searchQuery, setSearchQuery] = useState("")
     const [isSuccess, setIsSuccess] = useState(false)
+    const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'MOBILE_MONEY' | 'CARD'>('CASH')
 
     const filteredCatalog = useMemo(() => 
         products.filter(p => 
@@ -52,7 +53,7 @@ export default function POSTerminal() {
 
     const handleFinalCheckout = async () => {
         try {
-            await processCheckout({ paymentMethod: 'CASH' })
+            await processCheckout({ paymentMethod })
             setIsSuccess(true)
         } catch {}
     }
@@ -145,17 +146,43 @@ export default function POSTerminal() {
                                 )}
                             </ScrollArea>
 
-                            <div className="p-10 bg-slate-50/50 space-y-6">
+                            <div className="p-8 bg-slate-50/50 space-y-6">
                                 <Separator className="bg-slate-200/50" />
-                                <div className="flex items-center justify-between">
+                                
+                                {/* ── SÉLECTEUR DE PAIEMENT ── */}
+                                <div className="space-y-3">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Moyen de Paiement</span>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button onClick={() => setPaymentMethod('CASH')}
+                                            className={cn("flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all active:scale-95", 
+                                            paymentMethod === 'CASH' ? "bg-primary/10 border-primary text-primary font-black" : "bg-white border-slate-100 text-slate-400 font-bold hover:border-slate-300")}>
+                                            <Wallet className="w-5 h-5 mb-1" />
+                                            <span className="text-[10px] uppercase tracking-wider">Espèces</span>
+                                        </button>
+                                        <button onClick={() => setPaymentMethod('MOBILE_MONEY')}
+                                            className={cn("flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all active:scale-95", 
+                                            paymentMethod === 'MOBILE_MONEY' ? "bg-amber-500/10 border-amber-500 text-amber-600 font-black" : "bg-white border-slate-100 text-slate-400 font-bold hover:border-slate-300")}>
+                                            <Smartphone className="w-5 h-5 mb-1" />
+                                            <span className="text-[10px] uppercase tracking-wider">Mobile</span>
+                                        </button>
+                                        <button onClick={() => setPaymentMethod('CARD')}
+                                            className={cn("flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all active:scale-95", 
+                                            paymentMethod === 'CARD' ? "bg-blue-500/10 border-blue-500 text-blue-600 font-black" : "bg-white border-slate-100 text-slate-400 font-bold hover:border-slate-300")}>
+                                            <CreditCard className="w-5 h-5 mb-1" />
+                                            <span className="text-[10px] uppercase tracking-wider">Carte</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2">
                                     <div>
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total à Régler</span>
                                         <span className="text-4xl font-black text-slate-900 tracking-tighter">{totalTTC.toLocaleString()} F</span>
                                     </div>
                                 </div>
-                                <Button size="lg" className="w-full h-16 rounded-[1.5rem] bg-primary text-white shadow-modern-lg font-black text-lg hover:bg-primary/90 transition-all active:scale-[0.98]" 
+                                <Button size="lg" className="w-full h-16 rounded-[1.5rem] bg-slate-900 text-white shadow-modern-lg font-black text-lg hover:bg-slate-800 transition-all active:scale-[0.98]" 
                                     disabled={cart.length === 0 || isProcessing} onClick={handleFinalCheckout}>
-                                    {isProcessing ? <Loader2 className="animate-spin w-6 h-6" /> : <><CreditCard className="mr-3 w-6 h-6" strokeWidth={2.5} /> VALIDER LE PAIEMENT</>}
+                                    {isProcessing ? <Loader2 className="animate-spin w-6 h-6" /> : <><CheckCircle2 className="mr-3 w-6 h-6 text-primary" strokeWidth={3} /> VALIDER LE PAIEMENT</>}
                                 </Button>
                             </div>
                         </>
