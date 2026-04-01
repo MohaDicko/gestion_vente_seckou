@@ -3,7 +3,7 @@
 import { useState, useMemo, memo } from "react"
 import {
     Search, ShoppingCart, Plus, Minus, CreditCard,
-    ScanBarcode, Loader2, CheckCircle2, Wallet, Smartphone
+    ScanBarcode, Loader2, CheckCircle2, Wallet, Smartphone, Building2
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useInventory } from "@/hooks/useInventory"
 import { usePOS } from "@/hooks/usePOS"
+import { usePartners } from "@/hooks/usePartners"
 import { Product } from "@/types"
 
 // ── Shared Sub-components ──────────────────────────────────────────────
@@ -38,11 +39,13 @@ const CatalogItem = memo(({ product, onAdd }: { product: Product, onAdd: (p: Pro
 // ── Main POS Terminal ──────────────────────────────────────────────────
 export default function POSTerminal() {
     const { products, loading } = useInventory()
+    const { activePartners } = usePartners()
     const { cart, addToCart, updateQuantity, clearCart, totalTTC, processCheckout, isProcessing } = usePOS()
     
     const [searchQuery, setSearchQuery] = useState("")
     const [isSuccess, setIsSuccess] = useState(false)
-    const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'MOBILE_MONEY' | 'CARD'>('CASH')
+    const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'MOBILE_MONEY' | 'CARD' | 'PARTNER'>('CASH')
+    const [selectedPartnerId, setSelectedPartnerId] = useState<string>("")
     const [cashReceived, setCashReceived] = useState<number>(0)
 
     const filteredCatalog = useMemo(() => 
@@ -52,15 +55,29 @@ export default function POSTerminal() {
         ).sort((a, b) => (a.stock > 0 ? -1 : 1)).slice(0, 48)
     , [products, searchQuery])
 
+    const selectedPartner = useMemo(() => 
+        activePartners.find(p => p.id === selectedPartnerId)
+    , [activePartners, selectedPartnerId])
+
+    const partnerAmount = selectedPartner ? Math.round(totalTTC * selectedPartner.percentage / 100) : 0
+    const clientAmount = totalTTC - partnerAmount
+
     const handleFinalCheckout = async () => {
         try {
-            await processCheckout({ paymentMethod })
+            await processCheckout({ 
+                paymentMethod, 
+                partnerId: paymentMethod === 'PARTNER' ? selectedPartnerId : undefined,
+                partnerAmount: paymentMethod === 'PARTNER' ? partnerAmount : 0,
+                clientAmount: paymentMethod === 'PARTNER' ? clientAmount : totalTTC
+            })
             setIsSuccess(true)
             setCashReceived(0)
+            setSelectedPartnerId("")
         } catch {}
     }
 
     const isCashShort = paymentMethod === 'CASH' && cashReceived > 0 && cashReceived < totalTTC;
+    const isPartnerMissing = paymentMethod === 'PARTNER' && !selectedPartnerId;
 
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] animate-in fade-in duration-500 gap-6">
@@ -156,7 +173,7 @@ export default function POSTerminal() {
                                 {/* ── SÉLECTEUR DE PAIEMENT ── */}
                                 <div className="space-y-3">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Moyen de Paiement</span>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-4 gap-2">
                                         <button onClick={() => setPaymentMethod('CASH')}
                                             className={cn("flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all active:scale-95", 
                                             paymentMethod === 'CASH' ? "bg-primary/10 border-primary text-primary font-black" : "bg-white border-slate-100 text-slate-400 font-bold hover:border-slate-300")}>
@@ -175,8 +192,44 @@ export default function POSTerminal() {
                                             <CreditCard className="w-5 h-5 mb-1" />
                                             <span className="text-[10px] uppercase tracking-wider">Carte</span>
                                         </button>
+                                         <button onClick={() => setPaymentMethod('PARTNER')}
+                                            className={cn("flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all active:scale-95", 
+                                            paymentMethod === 'PARTNER' ? "bg-indigo-500/10 border-indigo-500 text-indigo-600 font-black" : "bg-white border-slate-100 text-slate-400 font-bold hover:border-slate-300")}>
+                                            <Building2 className="w-5 h-5 mb-1" />
+                                            <span className="text-[10px] uppercase tracking-wider">Compte</span>
+                                        </button>
                                     </div>
                                 </div>
+
+                                {/* ── PAIEMENT PARTENAIRE : SÉLECTEUR ── */}
+                                {paymentMethod === 'PARTNER' && (
+                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Sélectionner Partenaire</span>
+                                        <select 
+                                            className="w-full h-14 bg-white border-2 border-slate-100 rounded-2xl px-4 font-bold text-slate-900 focus:ring-4 focus:ring-indigo-500/5 outline-none appearance-none"
+                                            value={selectedPartnerId}
+                                            onChange={e => setSelectedPartnerId(e.target.value)}
+                                        >
+                                            <option value="">-- Choisir un compte --</option>
+                                            {activePartners.map(p => (
+                                                <option key={p.id} value={p.id}>{p.name} ({p.percentage}%)</option>
+                                            ))}
+                                        </select>
+                                        
+                                        {selectedPartner && (
+                                            <div className="bg-indigo-50 border border-indigo-100/50 p-4 rounded-2xl space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Part {selectedPartner.name}</span>
+                                                    <span className="text-sm font-black text-indigo-600">-{partnerAmount.toLocaleString()} F</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reliquat Client</span>
+                                                    <span className="text-lg font-black text-slate-900">{clientAmount.toLocaleString()} F</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* ── CHAMP ESPÈCES REÇUES ET CALCUL MONNAIE ── */}
                                 {paymentMethod === 'CASH' && (
@@ -209,13 +262,23 @@ export default function POSTerminal() {
                                 )}
 
                                 <div className="flex items-center justify-between pt-2">
-                                    <div>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total à Régler</span>
-                                        <span className="text-4xl font-black text-slate-900 tracking-tighter">{totalTTC.toLocaleString()} F</span>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                                            {paymentMethod === 'PARTNER' ? "Reste à Encaisser du Client" : "Total à Régler"}
+                                        </span>
+                                        <span className={cn("text-4xl font-black tracking-tighter", paymentMethod === 'PARTNER' ? "text-slate-900" : "text-slate-900")}>
+                                            {(paymentMethod === 'PARTNER' ? clientAmount : totalTTC).toLocaleString()} F
+                                        </span>
                                     </div>
+                                    {paymentMethod === 'PARTNER' && selectedPartner && (
+                                        <div className="text-right flex flex-col items-end">
+                                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-1">Part {selectedPartner.name}</span>
+                                            <span className="text-xl font-black text-indigo-600 tracking-tighter">{partnerAmount.toLocaleString()} F</span>
+                                        </div>
+                                    )}
                                 </div>
                                 <Button size="lg" className="w-full h-16 rounded-[1.5rem] bg-slate-900 text-white shadow-modern-lg font-black text-lg hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50" 
-                                    disabled={cart.length === 0 || isProcessing || isCashShort} onClick={handleFinalCheckout}>
+                                    disabled={cart.length === 0 || isProcessing || isCashShort || isPartnerMissing} onClick={handleFinalCheckout}>
                                     {isProcessing ? <Loader2 className="animate-spin w-6 h-6" /> : <><CheckCircle2 className="mr-3 w-6 h-6 text-primary" strokeWidth={3} /> VALIDER LE PAIEMENT</>}
                                 </Button>
                             </div>

@@ -12,7 +12,7 @@ export default defineConfig({
         timeout: 30000,
     },
     use: {
-        baseURL: 'http://localhost:3000',
+        baseURL: 'https://gestion-vente-seckou-web.vercel.app',
         trace: 'on-first-retry',
     },
     projects: [
@@ -21,9 +21,10 @@ export default defineConfig({
             use: { ...devices['Desktop Chrome'] },
         },
     ],
-    webServer: {
-        command: 'npm run dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-    },
+    // Serveur local désactivé car on teste la prod
+    // webServer: {
+    //     command: 'npm run dev',
+    //     url: 'http://localhost:3000',
+    //     reuseExistingServer: !process.env.CI,
+    // },
 });

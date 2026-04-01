@@ -19,7 +19,7 @@ import {
 import { toast } from "@/components/ui/toast"
 import { PageShell } from "@/components/PageShell"
 
-interface Insurance {
+interface Partner {
     id: string
     name: string
     code: string | null
@@ -30,27 +30,27 @@ interface Insurance {
 
 const emptyForm = { name: '', code: '', percentage: 70 }
 
-export default function InsurancesPage() {
+export default function PartnersPage() {
     const { user } = useAuth()
-    const [insurances, setInsurances] = useState<Insurance[]>([])
+    const [partners, setPartners] = useState<Partner[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [editTarget, setEditTarget] = useState<Insurance | null>(null)
+    const [editTarget, setEditTarget] = useState<Partner | null>(null)
     const [form, setForm] = useState(emptyForm)
 
     const isAdmin = user?.role === 'ADMIN'
 
-    async function fetchInsurances() {
+    async function fetchPartners() {
         setLoading(true)
         try {
-            const res = await fetch('/api/insurances')
-            if (res.ok) setInsurances(await res.json())
+            const res = await fetch('/api/partners')
+            if (res.ok) setPartners(await res.json())
         } catch { toast("Erreur chargement partenaires", 'error') }
         finally { setLoading(false) }
     }
 
-    useEffect(() => { fetchInsurances() }, [])
+    useEffect(() => { fetchPartners() }, [])
 
     const openCreate = () => {
         setEditTarget(null)
@@ -58,9 +58,9 @@ export default function InsurancesPage() {
         setDialogOpen(true)
     }
 
-    const openEdit = (ins: Insurance) => {
-        setEditTarget(ins)
-        setForm({ name: ins.name, code: ins.code ?? '', percentage: ins.percentage })
+    const openEdit = (partner: Partner) => {
+        setEditTarget(partner)
+        setForm({ name: partner.name, code: partner.code ?? '', percentage: partner.percentage })
         setDialogOpen(true)
     }
 
@@ -72,11 +72,11 @@ export default function InsurancesPage() {
             const payload = { name: form.name.trim(), code: form.code || undefined, percentage: Number(form.percentage) }
             let res: Response
             if (editTarget) {
-                res = await fetch(`/api/insurances/${editTarget.id}`, {
+                res = await fetch(`/api/partners/${editTarget.id}`, {
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                 })
             } else {
-                res = await fetch('/api/insurances', {
+                res = await fetch('/api/partners', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                 })
             }
@@ -84,11 +84,11 @@ export default function InsurancesPage() {
             if (!res.ok) throw new Error(data.error || 'Erreur serveur')
 
             if (editTarget) {
-                setInsurances(prev => prev.map(i => i.id === editTarget.id ? { ...i, ...data } : i))
+                setPartners(prev => prev.map(p => p.id === editTarget.id ? { ...p, ...data } : p))
                 toast(`✅ "${data.name}" mis à jour !`, 'success')
             } else {
-                setInsurances(prev => [...prev, data])
-                toast(`✅ "${data.name}" créée !`, 'success')
+                setPartners(prev => [...prev, data])
+                toast(`✅ "${data.name}" créé !`, 'success')
             }
             setDialogOpen(false)
         } catch (e) {
@@ -98,23 +98,23 @@ export default function InsurancesPage() {
         }
     }
 
-    const handleToggleStatus = async (ins: Insurance) => {
-        const newStatus = ins.status === 'ACTIF' ? 'INACTIF' : 'ACTIF'
+    const handleToggleStatus = async (partner: Partner) => {
+        const newStatus = partner.status === 'ACTIF' ? 'INACTIF' : 'ACTIF'
         try {
-            const res = await fetch(`/api/insurances/${ins.id}`, {
+            const res = await fetch(`/api/partners/${partner.id}`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus })
             })
             const data = await res.json()
             if (!res.ok) throw new Error(data.error)
-            setInsurances(prev => prev.map(i => i.id === ins.id ? { ...i, status: newStatus } : i))
+            setPartners(prev => prev.map(p => p.id === partner.id ? { ...p, status: newStatus } : p))
             toast(`Partenaire ${newStatus === 'ACTIF' ? 'activé' : 'désactivé'}`, 'success')
         } catch (e) {
             toast((e as Error).message, 'error')
         }
     }
 
-    const activeCount = insurances.filter(i => i.status === 'ACTIF').length
-    const inactiveCount = insurances.filter(i => i.status === 'INACTIF').length
+    const activeCount = partners.filter(p => p.status === 'ACTIF').length
+    const inactiveCount = partners.filter(p => p.status === 'INACTIF').length
 
     return (
         <PageShell>
@@ -139,7 +139,7 @@ export default function InsurancesPage() {
                 <Card className="border-l-4 border-l-indigo-500 shadow-sm">
                     <CardContent className="p-4">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total</p>
-                        <p className="text-3xl font-black text-slate-900 mt-1">{insurances.length}</p>
+                        <p className="text-3xl font-black text-slate-900 mt-1">{partners.length}</p>
                         <p className="text-xs text-slate-400 mt-1">Partenaires actifs</p>
                     </CardContent>
                 </Card>
@@ -170,7 +170,7 @@ export default function InsurancesPage() {
                         <div className="flex items-center justify-center h-40">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
-                    ) : insurances.length === 0 ? (
+                    ) : partners.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-40 gap-3 text-slate-400">
                             <Building2 className="h-10 w-10 text-slate-200" />
                             <span className="text-sm font-medium">Aucun partenaire configuré.</span>
@@ -189,48 +189,48 @@ export default function InsurancesPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {insurances.map((ins) => (
-                                    <TableRow key={ins.id} className={`hover:bg-slate-50 ${ins.status === 'INACTIF' ? 'opacity-50' : ''}`}>
+                                {partners.map((p) => (
+                                    <TableRow key={p.id} className={`hover:bg-slate-50 ${p.status === 'INACTIF' ? 'opacity-50' : ''}`}>
                                         <TableCell className="pl-6 font-bold text-slate-900 flex items-center gap-2">
-                                            <div className={`h-2 w-2 rounded-full ${ins.status === 'ACTIF' ? 'bg-emerald-400' : 'bg-slate-300'}`} />
-                                            {ins.name}
+                                            <div className={`h-2 w-2 rounded-full ${p.status === 'ACTIF' ? 'bg-emerald-400' : 'bg-slate-300'}`} />
+                                            {p.name}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="font-mono text-xs text-slate-400">{ins.code ?? '—'}</span>
+                                            <span className="font-mono text-xs text-slate-400">{p.code ?? '—'}</span>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex items-center justify-center gap-1">
                                                 <div className="w-24 bg-slate-100 rounded-full h-2">
-                                                    <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${ins.percentage}%` }} />
+                                                    <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${p.percentage}%` }} />
                                                 </div>
-                                                <span className="font-black text-indigo-700 text-sm w-10 text-right">{ins.percentage}%</span>
+                                                <span className="font-black text-indigo-700 text-sm w-10 text-right">{p.percentage}%</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant="secondary" className="font-mono">
-                                                {ins._count?.transactions || 0}
+                                                {p._count?.transactions || 0}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <Badge className={ins.status === 'ACTIF'
+                                            <Badge className={p.status === 'ACTIF'
                                                 ? 'bg-emerald-100 text-emerald-800 border-none hover:bg-emerald-100'
                                                 : 'bg-slate-100 text-slate-500 border-none hover:bg-slate-100'
                                             }>
-                                                {ins.status}
+                                                {p.status}
                                             </Badge>
                                         </TableCell>
                                         {isAdmin && (
                                             <TableCell className="text-right pr-6">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-indigo-50" onClick={() => openEdit(ins)}>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-indigo-50" onClick={() => openEdit(p)}>
                                                         <Pencil className="h-3.5 w-3.5 text-indigo-600" />
                                                     </Button>
                                                     <Button
                                                         variant="ghost" size="icon" className="h-8 w-8"
-                                                        onClick={() => handleToggleStatus(ins)}
-                                                        title={ins.status === 'ACTIF' ? 'Désactiver' : 'Activer'}
+                                                        onClick={() => handleToggleStatus(p)}
+                                                        title={p.status === 'ACTIF' ? 'Désactiver' : 'Activer'}
                                                     >
-                                                        <Power className={`h-3.5 w-3.5 ${ins.status === 'ACTIF' ? 'text-rose-500 hover:text-rose-700' : 'text-emerald-500'}`} />
+                                                        <Power className={`h-3.5 w-3.5 ${p.status === 'ACTIF' ? 'text-rose-500 hover:text-rose-700' : 'text-emerald-500'}`} />
                                                     </Button>
                                                 </div>
                                             </TableCell>
@@ -244,14 +244,14 @@ export default function InsurancesPage() {
             </Card>
 
             {/* ── Note informative ── */}
-            <Card className="bg-indigo-50 border-indigo-100 shadow-none">
+            <Card className="bg-indigo-50 border-indigo-100 shadow-none mt-6">
                 <CardContent className="p-4 flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
                     <div>
                         <p className="text-sm font-bold text-indigo-800">Usage des comptes partenaires</p>
                         <p className="text-xs text-indigo-600 mt-1">
-                            Lors d&apos;une vente, sélectionnez <strong>&quot;Assurance / Partenaire&quot;</strong>. 
-                            Idéal pour les ventes aux entreprises, les remises automatiques pour certains clients fidèles ou les bons de commande.
+                            Lors d&apos;une vente, sélectionnez un <strong>Partenaire</strong> pour appliquer une remise automatique ou gérer une facturation tiers-payant.
+                            Idéal pour les ventes aux entreprises, les clients VIP ou les bons de commande institutionnels.
                         </p>
                     </div>
                 </CardContent>
@@ -273,9 +273,9 @@ export default function InsurancesPage() {
                     </DialogHeader>
                     <div className="space-y-4 py-2">
                         <div>
-                            <Label htmlFor="ins-name" className="text-sm font-semibold">Nom du partenaire / Client B2B *</Label>
+                            <Label htmlFor="part-name" className="text-sm font-semibold">Nom du partenaire / Client B2B *</Label>
                             <Input
-                                id="ins-name"
+                                id="part-name"
                                 value={form.name}
                                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                                 placeholder="Ex: Hôtel de Ville, GIE Textile, Client VIP..."
@@ -283,9 +283,9 @@ export default function InsurancesPage() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="ins-code" className="text-sm font-semibold">Code interne (optionnel)</Label>
+                            <Label htmlFor="part-code" className="text-sm font-semibold">Code interne (optionnel)</Label>
                             <Input
-                                id="ins-code"
+                                id="part-code"
                                 value={form.code}
                                 onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
                                 placeholder="Ex: AMU-BF, CNSS-01..."
@@ -293,12 +293,12 @@ export default function InsurancesPage() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="ins-pct" className="text-sm font-semibold flex items-center gap-1">
-                                <Percent className="h-3.5 w-3.5" /> Taux de prise en charge *
+                            <Label htmlFor="part-pct" className="text-sm font-semibold flex items-center gap-1">
+                                <Percent className="h-3.5 w-3.5" /> Taux de remise / Prise en charge *
                             </Label>
                             <div className="flex items-center gap-3 mt-1">
                                 <Input
-                                    id="ins-pct"
+                                    id="part-pct"
                                     type="number"
                                     min={0} max={100}
                                     value={form.percentage}
@@ -311,7 +311,7 @@ export default function InsurancesPage() {
                                 </div>
                             </div>
                             <p className="text-xs text-slate-400 mt-1">
-                                Le partenaire couvre {form.percentage}% du montant total.
+                                Le partenaire bénéficie de {form.percentage}% de réduction ou prise en charge.
                             </p>
                         </div>
                     </div>

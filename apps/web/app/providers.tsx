@@ -31,8 +31,8 @@ function DataPreloader({ children }: { children: React.ReactNode }) {
                     queryFn: () => fetch('/api/dashboard/stats').then(res => res.json()),
                 }),
                 queryClient.prefetchQuery({
-                    queryKey: ['pos-insurances'],
-                    queryFn: () => fetch('/api/insurances').then(res => res.json()),
+                    queryKey: ['pos-partners'],
+                    queryFn: () => fetch('/api/partners').then(res => res.json()),
                 }),
                  queryClient.prefetchQuery({
                     queryKey: ['dashboard-reports'],

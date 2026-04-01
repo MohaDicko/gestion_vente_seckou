@@ -10,7 +10,7 @@ const UpdateSchema = z.object({
     status: z.enum(['ACTIF', 'INACTIF']).optional(),
 });
 
-// ── PATCH : Modifier une assurance ──────────────────────────────────────────
+// ── PATCH : Modifier un partenaire ──────────────────────────
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
@@ -32,12 +32,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         return NextResponse.json(updated);
     } catch (error) {
-        console.error('Insurance PATCH Error:', error);
+        console.error('Partner PATCH Error:', error);
         return NextResponse.json({ error: 'Erreur lors de la mise à jour' }, { status: 500 });
     }
 }
 
-// ── DELETE : Désactiver (soft delete) une assurance ─────────────────────────
+// ── DELETE : Désactiver (soft delete) un partenaire ─────────────────────────
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;

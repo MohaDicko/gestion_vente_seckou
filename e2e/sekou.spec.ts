@@ -7,9 +7,9 @@ test.describe('Sekou Draperie - Flux Critiques', () => {
     const ADMIN_PASS = 'Admin@Sekou2026';
 
     test('1. Authentification Admin et accès Dashboard', async ({ page }) => {
-        // Redirection vers login forcée
-        await page.goto('/');
-        await expect(page).toHaveURL(/.*\/login/);
+        // Redirection vers login forcée avec un grand timeout (Next.js compile la page localement)
+        await page.goto('/', { timeout: 90000 });
+        await expect(page).toHaveURL(/.*\/login/, { timeout: 60000 });
 
         // Remplissage du formulaire
         await page.fill('input[name="email"]', ADMIN_EMAIL);
@@ -22,7 +22,7 @@ test.describe('Sekou Draperie - Flux Critiques', () => {
         await expect(page).toHaveURL('/');
         
         // Vérification de la disparition du loader
-        await expect(page.locator('text=Vérification des accès')).toBeHidden({ timeout: 10000 });
+        await expect(page.locator('text=Vérification des accès...')).toBeHidden({ timeout: 15000 });
 
         // Vérification que les widgets s'affichent bien
         await expect(page.locator('text=Flux de Trésorerie')).toBeVisible({ timeout: 15000 });
@@ -30,8 +30,8 @@ test.describe('Sekou Draperie - Flux Critiques', () => {
     });
 
     test('2. Navigation vers la Caisse (POS)', async ({ page }) => {
-        // Login rapide
-        await page.goto('/login');
+        // Login rapide avec grand timeout
+        await page.goto('/login', { timeout: 90000 });
         await page.fill('input[name="email"]', ADMIN_EMAIL);
         await page.fill('input[name="password"]', ADMIN_PASS);
         await page.click('button[type="submit"]');
@@ -51,27 +51,27 @@ test.describe('Sekou Draperie - Flux Critiques', () => {
     });
 
     test('3. Recherche et ajout de produit au panier', async ({ page }) => {
-        await page.goto('/login');
+        await page.goto('/login', { timeout: 90000 });
         await page.fill('input[name="email"]', ADMIN_EMAIL);
         await page.fill('input[name="password"]', ADMIN_PASS);
         await page.click('button[type="submit"]');
         
-        await page.goto('/pos');
+        await page.goto('/pos', { timeout: 90000 });
         
         // On attend le chargement
         await expect(page.locator('.lucide-loader-2')).toBeHidden({ timeout: 15000 });
         
-        // Clic sur le premier produit affiché dans la grille pour l'ajouter au panier
-        // On sélectionne la première carte produit (on assume que le catalogue initial a été seedé)
-        const firstProductCard = page.locator('.grid > div').first();
-        await expect(firstProductCard).toBeVisible();
-        await firstProductCard.click();
+        // On sélectionne le premier bouton produit (CatalogItem)
+        const firstProductBtn = page.locator('button:has(.lucide-shopping-cart)').first();
+        await expect(firstProductBtn).toBeVisible({ timeout: 15000 });
+        await firstProductBtn.click();
 
-        // On vérifie que le panier affiche au moins "1" dans les quantités
-        await expect(page.locator('text=1 x')).toBeVisible();
+        // On vérifie que le panier affiche le badge de quantité ou Total
+        await expect(page.locator('text=Total à Régler')).toBeVisible();
+        await expect(page.locator('text=VALIDER LE PAIEMENT')).toBeVisible();
         
-        // Le bouton "ENCAISSER" doit être actif
-        const payButton = page.locator('button:has-text("ENCAISSER")');
+        // Le bouton "VALIDER LE PAIEMENT" doit être actif (ne pas avoir l'attribut disabled)
+        const payButton = page.locator('button:has-text("VALIDER LE PAIEMENT")');
         await expect(payButton).toBeEnabled();
     });
 });

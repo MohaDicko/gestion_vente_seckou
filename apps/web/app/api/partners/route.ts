@@ -5,19 +5,19 @@ import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-const InsuranceSchema = z.object({
+const PartnerSchema = z.object({
     name: z.string().min(2, 'Nom requis'),
     code: z.string().optional(),
     percentage: z.number().int().min(0).max(100),
 });
 
-// ── GET : Liste toutes les assurances ────────────────────────────────────────
+// ── GET : Liste tous les partenaires ────────────────────────────────────────
 export async function GET() {
     try {
         const session = await auth();
         if (!session) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
-        const insurances = await prisma.partner.findMany({
+        const partners = await prisma.partner.findMany({
             orderBy: { name: 'asc' },
             select: {
                 id: true,
@@ -31,14 +31,14 @@ export async function GET() {
             }
         });
 
-        return NextResponse.json(insurances);
+        return NextResponse.json(partners);
     } catch (error) {
-        console.error('Insurances GET Error:', error);
+        console.error('Partners GET Error:', error);
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
 
-// ── POST : Créer une assurance ───────────────────────────────────────────────
+// ── POST : Créer un partenaire ───────────────────────────────────────────────
 export async function POST(req: Request) {
     try {
         const session = await auth();
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const validation = InsuranceSchema.safeParse(body);
+        const validation = PartnerSchema.safeParse(body);
         if (!validation.success) {
             return NextResponse.json({ error: 'Données invalides', details: validation.error.format() }, { status: 400 });
         }
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(partner, { status: 201 });
     } catch (error) {
-        console.error('Insurance POST Error:', error);
+        console.error('Partner POST Error:', error);
         return NextResponse.json({ error: 'Erreur lors de la création' }, { status: 500 });
     }
 }
